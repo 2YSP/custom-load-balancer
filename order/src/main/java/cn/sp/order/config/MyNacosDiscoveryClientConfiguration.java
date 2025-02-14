@@ -10,7 +10,6 @@ import com.alibaba.cloud.nacos.discovery.NacosWatch;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.client.CommonsClientAutoConfiguration;
 import org.springframework.cloud.client.ConditionalOnBlockingDiscoveryEnabled;
@@ -19,7 +18,7 @@ import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.discovery.simple.SimpleDiscoveryClientAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
+import org.springframework.core.env.Environment;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 /**
@@ -38,6 +37,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 public class MyNacosDiscoveryClientConfiguration {
 
 
+
     @Bean
     public DiscoveryClient nacosDiscoveryClient(NacosServiceDiscovery nacosServiceDiscovery) {
         return new NacosDiscoveryClient(nacosServiceDiscovery);
@@ -48,8 +48,11 @@ public class MyNacosDiscoveryClientConfiguration {
             value = {"spring.cloud.nacos.discovery.watch.enabled"},
             matchIfMissing = true
     )
-    public NacosWatch nacosWatch(NacosServiceManager nacosServiceManager, NacosDiscoveryProperties nacosDiscoveryProperties, ObjectProvider<ThreadPoolTaskScheduler> taskExecutorObjectProvider) {
-        nacosDiscoveryProperties.getMetadata().put("request-tag", "ship");
+    public NacosWatch nacosWatch(NacosServiceManager nacosServiceManager, NacosDiscoveryProperties nacosDiscoveryProperties,
+                                 ObjectProvider<ThreadPoolTaskScheduler> taskExecutorObjectProvider, Environment environment) {
+        // 环境变量读取标签
+        String tag = environment.getProperty("tag");
+        nacosDiscoveryProperties.getMetadata().put("request-tag", tag);
         return new NacosWatch(nacosServiceManager, nacosDiscoveryProperties, taskExecutorObjectProvider);
     }
 }
